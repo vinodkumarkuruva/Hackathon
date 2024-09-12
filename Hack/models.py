@@ -16,12 +16,15 @@ class User(db.Model,UserMixin):
     is_authorized = db.Column(db.Boolean, default=False)
     hackathons = db.relationship('Hackathon', backref='creator', cascade="all, delete", lazy=True)
     
-
+    # submissions = db.relationship('Submission', backref='participant', cascade="all, delete", lazy=True)
+    # registrations = db.relationship('Registration', backref='participant', cascade="all, delete", lazy=True)
+    
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
 
 class Hackathon(db.Model):
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=False)
@@ -32,9 +35,24 @@ class Hackathon(db.Model):
     reward_prize = db.Column(db.String(255), nullable=False)
     creator_id = db.Column(db.Integer, db.ForeignKey('user.id',ondelete='CASCADE'), nullable=False)
     
+    # registrations = db.relationship('Registration', backref='event', cascade="all, delete", lazy=True)
+    # submissions = db.relationship('Submission', backref='participant', cascade="all, delete", lazy=True)
+
    
 class Registration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     hackathon_id = db.Column(db.Integer, db.ForeignKey('hackathon.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+
+class Submission(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    hackathon_id = db.Column(db.Integer, db.ForeignKey('hackathon.id'), nullable=False)
+    submission_name = db.Column(db.String(255), nullable=True)
+    summary = db.Column(db.Text, nullable=True)
+    submission_image = db.Column(db.String(255), nullable=True)
+    submission_file = db.Column(db.String(255), nullable=True)
+    submission_link = db.Column(db.String(255), nullable=True)
+    submitted_at = db.Column(db.DateTime, default=db.func.current_timestamp())

@@ -14,7 +14,8 @@ class User(db.Model,UserMixin):
     email = db.Column(db.String(120), nullable=False, unique=True, index=True)
     password_hash = db.Column(db.String(128), nullable=False)
     is_authorized = db.Column(db.Boolean, default=False)
-    hackathons = db.relationship('Hackathon', backref='creator', lazy=True)
+    hackathons = db.relationship('Hackathon', backref='creator', cascade="all, delete", lazy=True)
+    
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -29,8 +30,8 @@ class Hackathon(db.Model):
     start_datetime = db.Column(db.DateTime, nullable=True)
     end_datetime = db.Column(db.DateTime, nullable=True)
     reward_prize = db.Column(db.String(255), nullable=False)
-    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-
+    creator_id = db.Column(db.Integer, db.ForeignKey('user.id',ondelete='CASCADE'), nullable=False)
+    
    
 class Registration(db.Model):
     id = db.Column(db.Integer, primary_key=True)

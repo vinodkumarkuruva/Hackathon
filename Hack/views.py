@@ -1,6 +1,6 @@
 import os
 from flask import request, jsonify
-from .models import User,Hackathon
+from .models import User,Hackathon,Registration
 from Hack import db,app
 from datetime import datetime,timedelta
 from werkzeug.security import generate_password_hash
@@ -166,3 +166,57 @@ def hackathon_by_username(username):
 
 ########## REGISTER ##############
 
+
+@app.route('/hackathon/register', methods=['POST'])
+def register_for_hackathon():
+    data = request.json
+    Hac_title = data['title']
+    Hack = Hackathon.query.filter_by(title=Hac_title).first()
+
+    if Hack :
+        registration = Registration(user_id=current_user.id, hackathon_id=Hack.id,created_at=datetime.utcnow())
+        db.session.add(registration)
+        db.session.commit()
+        return jsonify({'message': 'Registered for hackathon successfully'}), 201
+    return jsonify({'alert': 'Hackathon is not there'}), 201
+
+
+@app.route('/hackathon/<int:hackathon_id>/users', methods=['GET'])
+def get_users_for_hackathon(hackathon_id):
+    registrations = Registration.query.filter_by(hackathon_id=hackathon_id).all()
+
+    users = []
+    for reg in registrations:
+        user = User.query.get(reg.user_id)
+        if user:
+            users.append({
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
+            })
+
+    if not users:
+        return jsonify({'message': 'No users found for this hackathon'}), 404
+    return jsonify({'users': users}), 200
+
+
+@app.route('/user/<int:user_id>/hackathons', methods=['GET'])
+def get_hackathons_for_user(user_id):
+    registrations = Registration.query.filter_by(user_id=user_id).all()
+
+    if not registrations:
+        return jsonify({'message': 'No registrations found for this user'}), 404
+
+    hackathons = []
+    for reg in registrations:
+        hackathon = Hackathon.query.get(reg.hackathon_id)
+        if hackathon:
+            hackathons.append({
+                'id': hackathon.id,
+                'name': hackathon.title,
+                'description': hackathon.description,
+                'start_date': hackathon.start_datetime.strftime('%Y-%m-%d'),
+                'end_date': hackathon.end_datetime.strftime('%Y-%m-%d')
+            })
+
+    return jsonify({'hackathons': hackathons}), 200
